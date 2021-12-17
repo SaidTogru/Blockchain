@@ -22,7 +22,7 @@ class Block():
     def hash(self):
         return updatehash(self.previous_hash, self.number, self.data, self.nonce)
     def __str__(self):
-        return str("Block#: %s\nHash: %s\nPrevious: %s\nNonce: %s\n"%(self.number,self.hash(),self.previous_hash,self.data,self.nonce))
+        return str("Block#: %s\nHash: %s\nPrevious: %s\nData: %s\nNonce: %s\n"%(self.number,self.hash(),self.previous_hash,self.data,self.nonce))
 
 class Blockchain():
     pass
