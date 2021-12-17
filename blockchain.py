@@ -28,7 +28,7 @@ class Blockchain():
     pass
 
 def main():
-    block=Block("helloworld",1)
+    block=Block("Genesis",1)
     print(block)
 
 
