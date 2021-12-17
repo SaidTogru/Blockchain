@@ -47,10 +47,30 @@ class Blockchain:
             }
         )
 
+    def mine(self, block):
+        try:
+            block.previous_hash = self.chain[-1].get("hash")
+        except IndexError:
+            pass
+
+        while True:
+            if block.hash()[: self.difficulty] == "0" * self.difficulty:
+                self.add(block)
+                break
+            else:
+                block.nonce += 1
+
 
 def main():
-    block = Block("Genesis", 1)
-    print(block)
+    blockchain = Blockchain()
+    database = ["hello world", "what's up", "hello", "bye"]
+
+    num = 0
+    for data in database:
+        num += 1
+        blockchain.mine(Block(data, num))
+
+    print(blockchain.chain)
 
 
 if __name__ == "__main__":
