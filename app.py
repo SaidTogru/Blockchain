@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 app.config["MYSQL_HOST"] = "localhost"
 app.config["MYSQL_USER"] = "root"
-app.config["MYSQL_PASSWORD"] = "Aminemann"
+app.config["MYSQL_PASSWORD"] = "Aminemann"  # 1234
 app.config["MYSQL_DB"] = "crypto"
 app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 
@@ -32,4 +32,4 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    app.secret_key = "secret123"
+    app.secret_key = "secret123"  # 1234
