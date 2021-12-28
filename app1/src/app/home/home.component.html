@@ -1,0 +1,55 @@
+<div class="container">
+    <header class="jumbotron">
+        <p>{{ content }}</p>
+    </header>
+</div>
+
+<div class="row">
+    <div class="col-6" *ngFor="let block of this.blockchain">
+        <div class="container my-3 p-0">
+            <div class="card px-4">
+                <p class="h8 py-3">Block #{{block.index}}</p>
+                <div class="row gx-3">
+                    <div class="col-12">
+                        <div class="d-flex flex-column">
+                            <p class="text mb-1">Previous Hash</p> <input class="form-control mb-3" type="text" readonly
+                                value="{{block.previous_hash}}">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex flex-column">
+                            <p class="text mb-1">Proof</p> <input class="form-control mb-3" type="text" readonly
+                                value="{{block.proof}}">
+                        </div>
+                    </div>
+                    <div class=" col-12">
+                        <div class="d-flex flex-column">
+                            <p class="text mb-1">Timestamp</p> <input class="form-control mb-3" type="text" readonly
+                                value="{{block.timestamp}}">
+                        </div>
+                    </div>
+                    <div class=" col-12">
+                        <div class="d-flex flex-column">
+                            <p class="text mb-1">Transactions</p>
+                            <div (click)="this.showTransaction(block.index)" class="btn btn-primary mb-3"> <span
+                                    class="ps-3">
+                                    Click for Transactions</span> <span class="fas fa-arrow-right"></span> </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <button type="button" class="btn btn-primary" (click)="mine()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-minecart"
+            viewBox="0 0 16 16">
+            <path
+                d="M4 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM.115 3.18A.5.5 0 0 1 .5 3h15a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 14 12H2a.5.5 0 0 1-.491-.408l-1.5-8a.5.5 0 0 1 .106-.411zm.987.82 1.313 7h11.17l1.313-7H1.102z">
+            </path>
+        </svg>
+        Mine HSRM-Coin
+    </button>
+</div>
