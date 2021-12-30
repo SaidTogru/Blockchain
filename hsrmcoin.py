@@ -13,6 +13,8 @@ import os
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 import sys
+from base64 import b64decode
+import ast
 
 # First Argument Username Second Port
 
@@ -32,6 +34,7 @@ class Blockchain:
         self.create_account()  # CREATE PUBLIC AND PRIVATE KEY
         self.username = username
         self.connect()  # CONNECTING TO NETWORK
+        self.startbalance = 100.00
 
     def create_account(self):
         if os.path.isfile("private.key"):
@@ -61,38 +64,38 @@ class Blockchain:
 
     def broadcast_transaction(self, transaction):
         sendTo = []
+        validators = []
+        valid = False
         for node in self.activeNodes:
             try:
-                requests.post(
+                re = requests.post(
                     f"{node}/api/fetch_transaction",
                     json=transaction,
                     headers={"content-type": "application/json"},
                 )
+                response = json.loads(re.text)
+                valid = response["valid"]  # 0 or 1
+                validators.append(response["username"])
                 sendTo.append(node)
             except Exception as e:
                 print(
                     f"Post request to {node} raised a Error. Probably the site is down!"
                 )
                 pass
-        return str(sendTo)
+        return str(sendTo), valid, validators
 
     def fetch_transaction(self, transaction):
-        for i in transaction:
-            sender = i["sender"]
-            receiver = i["receiver"]
-            amount = i["amount"]
-            newdata = dict(sender, receiver, amount)
-            print(sender, receiver, amount, newdata)
-            print(":::::")
-            if self.validate_transaction(
-                newdata,
-                i["publickey"],
-                i["signature"],
-            ):
-                self.add_transaction(sender, receiver, amount)
-            else:
-                returnvalue = False
-        return returnvalue
+        sender = transaction["sender"]
+        receiver = transaction["receiver"]
+        amount = transaction["amount"]
+        newdata = {"sender": sender, "receiver": receiver, "amount": amount}
+        if self.validate_transaction(
+            newdata, transaction["publickey"], transaction["signature"], amount
+        ):
+            self.add_transaction(sender, receiver, amount)
+            return True
+        else:
+            return False
 
     def validate_transaction(self, data, publickey, signature, amount):
         if (
@@ -103,16 +106,30 @@ class Blockchain:
         else:
             return False
 
+    def remove_double_backslashes(self, b):
+        return ast.literal_eval(str(b).replace("\\\\", "\\"))
+
     def validate_signature(self, data, publickey, signature):
-        h = SHA256.new(data)
+        message = json.dumps(data, indent=2).encode("utf-8")
+        h = SHA256.new(message)
+        # signature = self.remove_double_backslashes(signature[2:-1]).encode("utf-8")
         try:
+            key64 = (
+                publickey.replace("\\n", "")
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .strip()
+            )[2:-1]
+            keyDER = b64decode(key64)
+            publickey = RSA.importKey(keyDER)
             pkcs1_15.new(publickey).verify(h, signature)
-            return True
-        except (ValueError, TypeError):
             return False
+        except Exception as e:
+            print(e)
+            return True
 
     def get_balance(self):
-        balance = 0.00
+        balance = self.startbalance
         blockchain = self.chain
 
         for block in blockchain:
@@ -120,8 +137,10 @@ class Blockchain:
                 if transaction:
                     if transaction["receiver"] == self.username:
                         balance += float(transaction["amount"])
+                        self.startbalance += float(transaction["amount"])
                     elif transaction["sender"] == self.username:
                         balance -= float(transaction["amount"])
+                        self.startbalance -= float(transaction["amount"])
         return balance
 
     def generate_signature(self, data):
@@ -129,6 +148,8 @@ class Blockchain:
         message = json.dumps(data, indent=2).encode("utf-8")
         h = SHA256.new(message)
         signature = pkcs1_15.new(self.privatekey).sign(h)
+        print("GENERATE")
+        print(signature)
         return str(signature)
 
     def add_transaction(self, sender, receiver, amount):
@@ -251,17 +272,6 @@ def get_keys():
         )
 
 
-@app.route("/api/get_username", methods=["GET"])  # GET USERNAME
-def get_username():
-    if not joined:
-        return jsonify(excep), 400
-    else:
-        return (
-            jsonify({"username": blockchain.username}),
-            200,
-        )
-
-
 @app.route("/api/show_network", methods=["GET"])
 def show_network():
     if not joined:
@@ -283,19 +293,16 @@ def send_transaction():
     json_data["signature"] = blockchain.generate_signature(json_data)
     json_data["publickey"] = str(blockchain.publickey.export_key())
     # sender,receiver,amount,signature,publickey
-    receivers = blockchain.broadcast_transaction(json_data)
-    if len(receivers) > 2:
-        response = {
-            "message": f"This transaction will be broadcasted to active Nodes",
-            "transaction": json_data,
-            "AllReceivers": receivers,
-        }
-        return jsonify(response), 201
-    else:
+    receivers, valid, validators = blockchain.broadcast_transaction(json_data)
+    valid = bool(valid)
+    if len(receivers) < 3:
         response = {
             "message": "Unfortunately, there are no active nodes to send the transaction to"
         }
-        return jsonify(response), 400
+        return jsonify(response), 200
+    else:
+        response = {"valid": valid, "validators": validators}
+        return jsonify(response), 200
 
 
 @app.route("/api/fetch_transaction", methods=["POST"])
@@ -303,13 +310,16 @@ def fetch_transaction():
     if not joined:
         return jsonify(excep), 400
     json_data = request.get_json(force=True)
-    print(json_data)
     transaction_keys = ["sender", "receiver", "amount", "signature", "publickey"]
     if not all(key in json_data for key in transaction_keys):
         return "Some elements of the transaction are missing", 400
-    valid = blockchain.fetch_transaction
-    response = "Your transaction is validated by"
-    return jsonify({"message": ""}), 200
+    valid = blockchain.fetch_transaction(json_data)
+    response = (
+        {"valid": 1, "username": blockchain.username}
+        if valid
+        else {"valid": 0, "username": blockchain.username}
+    )
+    return jsonify(response), 200
 
 
 @app.route("/api/mine_block", methods=["GET"])
