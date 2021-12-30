@@ -12,6 +12,7 @@ import * as Highcharts from 'highcharts';
 })
 export class AppComponent {
   title = 'app';
+  flash: boolean = false;
   content?: string;
   blockchain?: any;
   user: string = '';
@@ -31,14 +32,15 @@ export class AppComponent {
   }
 
   join(username: string, port: number){
-    console.log(username)
     this.userService.join(username,port).subscribe(
       data => {
         this.joined = true
         this.storageService.saveUser(username)
+        this.storageService.savePort(port)
         this.router.navigate(['/block'])
       },
       err => {
+        this.flash = true
         console.log(err)
       }
     );

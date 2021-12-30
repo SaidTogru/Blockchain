@@ -1,48 +1,49 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { StorageService } from './storage.service';
 
-const API_URL = 'http://localhost:5000/';
+const API_URL = 'http://localhost:';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
-  constructor(private http: HttpClient) { }
+export class UserService{
+  PORT: any
+
+  constructor(private http: HttpClient, private storageService: StorageService) { }
+
+  init(port: any): void {
+    this.PORT = port
+    console.log(this.PORT)
+  }
 
   getBlockchain(): Observable<any> {
-    return this.http.get(API_URL + 'api/get_chain', { responseType: 'text' });
+    return this.http.get(API_URL + this.PORT + '/api/get_chain', { responseType: 'text' });
   }
 
   mine(): Observable<any> {
-    return this.http.get(API_URL + 'api/mine_block');
+    return this.http.get(API_URL + this.PORT +  '/api/mine_block');
+  }
+
+  sync(): Observable<any> {
+    return this.http.get(API_URL + this.PORT +  '/api/replace_chain');
   }
 
   makeTransaction(sender: string, receiver: string, amount: number): Observable<any> {
-    return this.http.post(API_URL + 'api/send_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
-  }
-
-  getUserBoard(): Observable<any> {
-    return this.http.get(API_URL + 'user', { responseType: 'text' });
-  }
-
-  getModeratorBoard(): Observable<any> {
-    return this.http.get(API_URL + 'mod', { responseType: 'text' });
-  }
-
-  getAdminBoard(): Observable<any> {
-    return this.http.get(API_URL + 'admin', { responseType: 'text' });
+    return this.http.post(API_URL + this.PORT + '/api/send_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
   }
 
   join(username: string, port: number): Observable<any> {
-    return this.http.post(API_URL + 'api/join', { "username": username, "port": port });
+    this.init(port)
+    return this.http.post(API_URL + this.PORT + '/api/join', { "username": username, "port": port });
   }
 
   connected(): Observable<any> {
-    return this.http.get(API_URL + 'api/connected');
+    return this.http.get(API_URL + this.PORT + '/api/connected');
   }
 
   getKey(): Observable<any> {
-    return this.http.get(API_URL + 'api/get_keys');
+    return this.http.get(API_URL + '/api/get_keys');
   }
 }

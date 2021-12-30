@@ -21,6 +21,9 @@
   </nav>
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
     <div id="login" *ngIf="!joined">
+      <div *ngIf="this.flash" class="alert alert-danger" role="alert">
+        Service is not running on port {{port}}!
+      </div>
       <form name='form-login'>
         <span class="fontawesome-user"></span>
           <input type="text" id="user" [(ngModel)]="user" name="user" placeholder="Username">

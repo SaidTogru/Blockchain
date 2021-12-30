@@ -15,6 +15,7 @@ export class BlockComponent implements OnInit {
   amount: number = 0;
 
   constructor(private userService: UserService) { }
+
   ngOnInit(): void {
     this.userService.getBlockchain().subscribe(
       data => {
@@ -26,15 +27,12 @@ export class BlockComponent implements OnInit {
         this.content = JSON.parse(err.error).message;
       }
     );
-
-
   }
 
   showTransaction(index: any): void {
     console.log(index)
     console.log(this.blockchain[index].transactions)
   }
-
 
   transaction(): void {
     this.userService.makeTransaction(this.sender, this.receiver, this.amount).subscribe(
@@ -50,6 +48,18 @@ export class BlockComponent implements OnInit {
 
   mine(): void {
     this.userService.mine().subscribe(
+      data => {
+        console.log(data)
+        this.content = JSON.stringify(data)
+      },
+      err => {
+        this.content = JSON.parse(err.error).message;
+      }
+    )
+  }
+
+  sync(): void {
+    this.userService.sync().subscribe(
       data => {
         console.log(data)
         this.content = JSON.stringify(data)
