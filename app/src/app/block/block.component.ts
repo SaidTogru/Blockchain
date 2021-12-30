@@ -56,6 +56,7 @@ export class BlockComponent implements OnInit {
         this.content = JSON.parse(err.error).message;
       }
     )
+    window.location.reload();
   }
 
   sync(): void {

@@ -19,28 +19,28 @@ export class UserService{
   }
 
   getBlockchain(): Observable<any> {
-    return this.http.get(API_URL + this.PORT + '/api/get_chain', { responseType: 'text' });
+    return this.http.get(API_URL + this.storageService.getPort() + '/api/get_chain', { responseType: 'text' });
   }
 
   mine(): Observable<any> {
-    return this.http.get(API_URL + this.PORT +  '/api/mine_block');
+    return this.http.get(API_URL + this.storageService.getPort() +  '/api/mine_block');
   }
 
   sync(): Observable<any> {
-    return this.http.get(API_URL + this.PORT +  '/api/replace_chain');
+    return this.http.get(API_URL + this.storageService.getPort() +  '/api/replace_chain');
   }
 
   makeTransaction(sender: string, receiver: string, amount: number): Observable<any> {
-    return this.http.post(API_URL + this.PORT + '/api/send_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
+    return this.http.post(API_URL + this.storageService.getPort() + '/api/send_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
   }
 
   join(username: string, port: number): Observable<any> {
     this.init(port)
-    return this.http.post(API_URL + this.PORT + '/api/join', { "username": username, "port": port });
+    return this.http.post(API_URL + this.storageService.getPort() + '/api/join', { "username": username, "port": port });
   }
 
   connected(): Observable<any> {
-    return this.http.get(API_URL + this.PORT + '/api/connected');
+    return this.http.get(API_URL + this.storageService.getPort() + '/api/connected');
   }
 
   getKey(): Observable<any> {

@@ -73,6 +73,7 @@ class Blockchain:
                     f"{node}/api/fetch_transaction",
                     json=transaction,
                     headers={"content-type": "application/json"},
+                    timeout=1.5,
                 )
                 response = json.loads(re.text)
                 valid = response["valid"]  # 0 or 1
@@ -90,9 +91,11 @@ class Blockchain:
         receiver = transaction["receiver"]
         amount = transaction["amount"]
         newdata = {"sender": sender, "receiver": receiver, "amount": amount}
+        print("GOT NEW TRANSACTION", transaction)
         if self.validate_transaction(
             newdata, transaction["publickey"], transaction["signature"], amount
         ):
+            print("ADDED TRANSACTION")
             self.add_transaction(sender, receiver, amount)
             return True
         else:
@@ -149,8 +152,6 @@ class Blockchain:
         message = json.dumps(data, indent=2).encode("utf-8")
         h = SHA256.new(message)
         signature = pkcs1_15.new(self.privatekey).sign(h)
-        print("GENERATE")
-        print(signature)
         return str(signature)
 
     def add_transaction(self, sender, receiver, amount):
@@ -166,9 +167,9 @@ class Blockchain:
             "timestamp": str(datetime.datetime.now()),
             "proof": proof,
             "previous_hash": previous_hash,
-            "transactions": self.mempool,
+            "transactions": self.transactions,
         }
-        self.mempool = []
+        self.transactions = []
         self.chain.append(block)
         return block
 
@@ -211,18 +212,21 @@ class Blockchain:
         return True
 
     def replace_chain(self):
-        longest_chain = None
+        replaced = False
         max_length = len(self.chain)
         for node in self.activeNodes:
-            response = requests.get(f"{node}/api/get_chain")
-            if response.status_code == 200:
+            try:
+                response = requests.get(f"{node}/api/get_chain")
                 length = response.json()["length"]
                 chain = response.json()["chain"]
-                if length > max_length and self.is_chain_valid(chain):
+                if length > max_length and self.valid_chain(chain):
                     max_length = length
-                    longest_chain = chain
-        if longest_chain:
-            self.chain = longest_chain
+                    self.chain = chain
+                    replaced = True
+            except:
+                pass
+            # if response.status_code == 200:
+        if replaced:
             return True
         return False
 
@@ -331,7 +335,6 @@ def mine_block():
     previous_proof = previous_block["proof"]
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    # blockchain.add_transaction(sender=blockchain.username, receiver=, amount=1)
     block = blockchain.create_block(proof, previous_hash)
     response = {
         "message": "Congrats, you just mined a block!",
