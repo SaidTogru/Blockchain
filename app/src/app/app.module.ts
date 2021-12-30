@@ -8,13 +8,15 @@ import { AppComponent } from './app.component';
 import { ProfileComponent } from './profile/profile.component';
 import { HomeComponent } from './home/home.component';
 import { TransactionComponent } from './transaction/transaction.component';
+import { BlockComponent } from './block/block.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ProfileComponent,
     HomeComponent,
-    TransactionComponent
+    TransactionComponent,
+    BlockComponent
   ],
   imports: [
     BrowserModule,

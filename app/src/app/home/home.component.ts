@@ -9,9 +9,9 @@ import { UserService } from '../_services/user.service';
 export class HomeComponent implements OnInit {
   content?: string;
   blockchain?: any;
-  sender: string = '';
-  receiver: string = '';
-  amount: number = 0;
+  user: string = '';
+  port: number = 0;
+  joined: boolean = false;
 
   constructor(private userService: UserService) { }
 
@@ -26,37 +26,16 @@ export class HomeComponent implements OnInit {
         this.content = JSON.parse(err.error).message;
       }
     );
-
-
   }
 
-  showTransaction(index: any): void {
-    console.log(index)
-    console.log(this.blockchain[index].transactions)
-  }
-
-
-  transaction(): void {
-    this.userService.makeTransaction(this.sender, this.receiver, this.amount).subscribe(
+  join(username: string, port: number){
+    this.userService.join(username,port).subscribe(
       data => {
-        console.log(data)
-        this.content = JSON.stringify(data)
+        this.joined = true
       },
       err => {
-        this.content = JSON.parse(err.error).message;
+        console.log(err)
       }
-    )
-  }
-
-  mine(): void {
-    this.userService.mine().subscribe(
-      data => {
-        console.log(data)
-        this.content = JSON.stringify(data)
-      },
-      err => {
-        this.content = JSON.parse(err.error).message;
-      }
-    )
+    );
   }
 }
