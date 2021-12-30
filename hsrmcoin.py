@@ -214,11 +214,12 @@ joined = False
 excep = f"Before you can operate anything you must join the network"
 
 
-@app.route("/api/join", methods=["POST"])
+@app.route("/api/join", methods=["POST", "GET"])
 def join():
     global blockchain, joined
     json_data = request.get_json()
-    blockchain = Blockchain(json_data["username"])
+    username = json_data["username"] if json_data is not None else "Default"
+    blockchain = Blockchain(username)
     joined = True
     response = {
         "message": f"{blockchain.username}, thank you for joining the HSRM Network. You successfully created an Account and can participate!"
