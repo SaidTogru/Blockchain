@@ -14,7 +14,7 @@ export class StorageService {
     window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
-  public getToken(): string | null {
+  public getUser(): string | null  {
     return sessionStorage.getItem(USER_KEY);
   }
 

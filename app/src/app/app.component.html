@@ -1,3 +1,5 @@
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/networkgraph.js"></script>
 <div id="app">
   <nav class="navbar navbar-expand navbar-dark bg-dark">
     <a class="navbar-brand">HSRMCOIN</a>
@@ -16,32 +18,15 @@
       </li>
     </ul>
 
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item">
-        <a href="/register" class="nav-link" routerLink="register">Sign Up</a>
-      </li>
-      <li class="nav-item">
-        <a href="/login" class="nav-link" routerLink="login">Login</a>
-      </li>
-    </ul>
-
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item">
-        <a href="/profile" class="nav-link" routerLink="profile">KEK</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">LogOut</a>
-      </li>
-    </ul>
   </nav>
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
     <div id="login" *ngIf="!joined">
       <form name='form-login'>
         <span class="fontawesome-user"></span>
-          <input type="text" id="user" [(ngModel)]="user" placeholder="Username">
+          <input type="text" id="user" [(ngModel)]="user" name="user" placeholder="Username">
        
         <span class="fab fa-connectdevelop"></span>
-          <input type="number" id="pass" [(ngModel)]="port" min="5000" max="6000" placeholder="Port">
+          <input type="number" id="pass" [(ngModel)]="port" name="port" min="5000" max="6000" placeholder="Port">
         
         <input type="submit" (click)="join(user,port)" value="Login">
 
@@ -51,3 +36,5 @@
     <router-outlet></router-outlet>
   </div>
 </div>
+
+<div id="containers"></div>

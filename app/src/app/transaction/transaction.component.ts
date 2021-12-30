@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { StorageService } from '../_services/storage.service';
 import { UserService } from '../_services/user.service';
 
 @Component({
@@ -10,13 +11,15 @@ export class TransactionComponent implements OnInit {
 
   content?: string;
   blockchain?: string;
-  sender: string = '';
+  sender: any = '';
   receiver: string = '';
   amount: number = 0;
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService, private storageService: StorageService) { }
 
   ngOnInit(): void {
+    this.sender = this.storageService.getUser()
+    console.log(this.sender)
     this.userService.getBlockchain().subscribe(
       data => {
         this.blockchain = data;
