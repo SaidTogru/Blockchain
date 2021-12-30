@@ -227,12 +227,39 @@ def join():
     return jsonify(response), 200
 
 
-@app.route("/api/connected", methods=["GET"])
+@app.route("/api/connected", methods=["GET"])  # CHECK IF CONNECTED
 def connected():
     if not joined:
         return jsonify(), 400
     else:
         return jsonify(), 200
+
+
+@app.route("/api/get_keys", methods=["GET"])  # CHECK IF CONNECTED
+def get_keys():
+    if not joined:
+        return jsonify(excep), 400
+    else:
+        return (
+            jsonify(
+                {
+                    "publickey": str(blockchain.publickey.export_key()),
+                    "privatekey": str(blockchain.privatekey.export_key()),
+                }
+            ),
+            200,
+        )
+
+
+@app.route("/api/get_username", methods=["GET"])  # GET USERNAME
+def get_username():
+    if not joined:
+        return jsonify(excep), 400
+    else:
+        return (
+            jsonify({"username": blockchain.username}),
+            200,
+        )
 
 
 @app.route("/api/show_network", methods=["GET"])
@@ -268,7 +295,7 @@ def send_transaction():
         response = {
             "message": "Unfortunately, there are no active nodes to send the transaction to"
         }
-        return jsonify(response), 201
+        return jsonify(response), 400
 
 
 @app.route("/api/fetch_transaction", methods=["POST"])
@@ -280,7 +307,9 @@ def fetch_transaction():
     transaction_keys = ["sender", "receiver", "amount", "signature", "publickey"]
     if not all(key in json_data for key in transaction_keys):
         return "Some elements of the transaction are missing", 400
-    return jsonify(json_data), 200
+    valid = blockchain.fetch_transaction
+    response = "Your transaction is validated by"
+    return jsonify({"message": ""}), 200
 
 
 @app.route("/api/mine_block", methods=["GET"])
