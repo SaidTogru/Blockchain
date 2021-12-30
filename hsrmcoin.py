@@ -6,18 +6,135 @@ import requests
 from uuid import uuid4
 from urllib.parse import urlparse
 from flask_cors import CORS
-from werkzeug.wrappers import response
 import base64
 from Crypto import Random
 from Crypto.PublicKey import RSA
+import os
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+import sys
+from requests import get
+
+# First Argument Username Second Port
+
+if len(sys.argv) < 3:
+    print("Please read the docs")
+    sys.exit(1)
 
 
 class Blockchain:
-    def __init__(self):
+    activeNodes = []
+
+    def __init__(self, username):
         self.chain = []
-        self.transactions = [{"amount": 10, "receiver": "Bob", "sender": "Amine"}]
-        self.create_block(proof=1, previous_hash="0")
-        self.nodes = set()
+        self.mempool = []
+        self.unconfirmed_transactions = []
+        self.create_block(proof=0, previous_hash="0")  # GENESIS BLOCK
+        self.create_account()  # CREATE PUBLIC AND PRIVATE KEY
+        self.username = username
+        self.connect()  # CONNECTING TO NETWORK
+
+    def create_account(self):
+        if os.path.isfile("private.key"):
+            with open("private.key", "rb") as content_file:
+                self.privatekey = content_file.read()
+                self.privatekey = RSA.importKey(self.privatekey)
+            self.publickey = self.privatekey.publickey()
+        else:
+            self.privatekey = RSA.generate(2048)
+            with open("private.key", "wb") as content_file:
+                content_file.write(self.privatekey.exportKey("PEM"))
+            self.publickey = self.privatekey.publickey()
+
+    def connect(self):  # Peer Discovery
+        ip = get("https://api.ipify.org").content.decode("utf8")
+        with open("DNS_Feed.json") as json_file:
+            data = json.load(json_file)
+            for name, address in data.items():
+                if (
+                    address[0][address[0].find("http://") + 7 : address[0].find(":50")]
+                    == ip
+                ):
+                    if address[1].split(":")[-1] != sys.argv[2]:
+                        self.activeNodes.append(address[1])
+                else:
+                    self.activeNodes.append(address[0])
+
+    def broadcast_transaction(self, transaction):
+        sendTo = []
+        for node in self.activeNodes:
+            try:
+                requests.post(f"{node}/api/fetch_transaction", data=jsonify("test"))
+                sendTo.append(node)
+            except Exception as e:
+                print(e)
+                print(
+                    f"Post request to {node} raised a Error. Probably the site is down!"
+                )
+                pass
+        return str(sendTo)
+
+    def fetch_transaction(self, transaction):
+        for i in transaction:
+            sender = i["sender"]
+            receiver = i["receiver"]
+            amount = i["amount"]
+            newdata = dict(sender, receiver, amount)
+            print(sender, receiver, amount, newdata)
+            print(":::::")
+            if self.validate_transaction(
+                newdata,
+                i["publickey"],
+                i["signature"],
+            ):
+                self.add_transaction(sender, receiver, amount)
+            else:
+                returnvalue = False
+        return returnvalue
+
+    def validate_transaction(self, data, publickey, signature, amount):
+        if (
+            self.validate_signature(data, publickey, signature)
+            and self.get_balance() >= amount
+        ):
+            return True
+        else:
+            return False
+
+    def validate_signature(self, data, publickey, signature):
+        h = SHA256.new(data)
+        try:
+            pkcs1_15.new(publickey).verify(h, signature)
+            return True
+        except (ValueError, TypeError):
+            return False
+
+    def get_balance(self):
+        balance = 0.00
+        blockchain = self.chain
+
+        for block in blockchain:
+            for transaction in block["transactions"]:
+                if transaction:
+                    if transaction["receiver"] == self.username:
+                        balance += float(transaction["amount"])
+                    elif transaction["sender"] == self.username:
+                        balance -= float(transaction["amount"])
+        return balance
+
+    def generate_signature(self, data):
+        # PKCS#1 v1.5 (RSA): private RSA key (loaded from a file) used to compute the signature of a message:
+        message = json.dumps(data, indent=2).encode("utf-8")
+        h = SHA256.new(message)
+        signature = pkcs1_15.new(self.privatekey).sign(h)
+        return str(signature)
+
+    def add_transaction(self, sender, receiver, amount):
+        self.transactions.append(
+            {"sender": sender, "receiver": receiver, "amount": amount}
+        )
+        previous_block = self.get_previous_block()
+        return previous_block["index"] + 1
 
     def create_block(self, proof, previous_hash):
         block = {
@@ -25,9 +142,9 @@ class Blockchain:
             "timestamp": str(datetime.datetime.now()),
             "proof": proof,
             "previous_hash": previous_hash,
-            "transactions": self.transactions,
+            "transactions": self.mempool,
         }
-        self.transactions = []
+        self.mempool = []
         self.chain.append(block)
         return block
 
@@ -51,7 +168,7 @@ class Blockchain:
         encoded_block = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(encoded_block).hexdigest()
 
-    def is_chain_valid(self, chain):
+    def valid_chain(self, chain):
         previous_block = chain[0]
         block_index = 1
         while block_index < len(chain):
@@ -69,23 +186,11 @@ class Blockchain:
             block_index += 1
         return True
 
-    def add_transaction(self, sender, receiver, amount):
-        self.transactions.append(
-            {"sender": sender, "receiver": receiver, "amount": amount}
-        )
-        previous_block = self.get_previous_block()
-        return previous_block["index"] + 1
-
-    def add_node(self, address):
-        parsed_url = urlparse(address)
-        self.nodes.add(parsed_url.netloc)
-
     def replace_chain(self):
-        network = self.nodes
         longest_chain = None
         max_length = len(self.chain)
-        for node in network:
-            response = requests.get(f"http://{node}/api/get_chain")
+        for node in self.activeNodes:
+            response = requests.get(f"{node}/api/get_chain")
             if response.status_code == 200:
                 length = response.json()["length"]
                 chain = response.json()["chain"]
@@ -97,38 +202,82 @@ class Blockchain:
             return True
         return False
 
-    def get_balance(self, username):
-        balance = 0.00
-        blockchain = self.chain
-
-        for block in blockchain:
-            print(block)
-            for transaction in block["transactions"]:
-                if transaction:
-                    print(transaction)
-                    if transaction["receiver"] == username:
-                        balance += float(transaction["amount"])
-                    elif transaction["sender"] == username:
-                        balance -= float(transaction["amount"])
-        return balance
-
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Creating an address for the node on Port 5000
-node_address = str(uuid4()).replace("-", "")
 
-blockchain = Blockchain()
+blockchain = None
+joined = False
+excep = f"Before you can operate anything you must join the network"
+
+
+@app.route("/api/join", methods=["GET"])
+def join():
+    global blockchain, joined
+    blockchain = Blockchain(str(sys.argv[1]))
+    joined = True
+    return (
+        f"{blockchain.username}, thank you for joining the HSRM Network. You successfully created an Account and can participate!",
+        200,
+    )
+
+
+@app.route("/api/show_network", methods=["GET"])
+def show_network():
+    if not joined:
+        return excep, 400
+    if len(blockchain.activeNodes) == 0:
+        return "There are no peers in the network", 200
+    else:
+        return f"Currently on the network: {blockchain.activeNodes}", 200
+
+
+@app.route("/api/send_transaction", methods=["POST"])
+def send_transaction():
+    if not joined:
+        return excep, 400
+    json_data = request.get_json()
+    transaction_keys = ["sender", "receiver", "amount"]
+    if not all(key in json_data for key in transaction_keys):
+        return "Some elements of the transaction are missing", 400
+    json_data["signature"] = blockchain.generate_signature(json_data)
+    json_data["publickey"] = str(blockchain.publickey.export_key())
+    # sender,receiver,amount,signature,publickey
+    receivers = blockchain.broadcast_transaction(json_data)
+    if len(receivers) > 2:
+        response = {
+            "message": f"This transaction will be broadcasted to active Nodes",
+            "transaction": json_data,
+            "AllReceivers": receivers,
+        }
+        return jsonify(response), 201
+    else:
+        response = "Unfortunately, there are no active nodes to send the transaction to"
+        return response, 201
+
+
+@app.route("/api/fetch_transaction", methods=["POST"])
+def fetch_transaction():
+    if not joined:
+        return excep, 400
+    json_data = request.get_json(force=True)
+    print(json_data)
+    transaction_keys = ["sender", "receiver", "amount", "signature", "publickey"]
+    if not all(key in json_data for key in transaction_keys):
+        return "Some elements of the transaction are missing", 400
+    return jsonify(json_data), 200
 
 
 @app.route("/api/mine_block", methods=["GET"])
 def mine_block():
+    if not joined:
+        return excep, 400
     previous_block = blockchain.get_previous_block()
     previous_proof = previous_block["proof"]
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transaction(sender=node_address, receiver="Amine", amount=1)
+    # blockchain.add_transaction(sender=blockchain.username, receiver=, amount=1)
     block = blockchain.create_block(proof, previous_hash)
     response = {
         "message": "Congrats, you just mined a block!",
@@ -141,9 +290,11 @@ def mine_block():
     return jsonify(response), 200
 
 
-@app.route("/is_valid", methods=["GET"])
-def is_valid():
-    is_valid = blockchain.is_chain_valid(blockchain.chain)
+@app.route("/api/valid_chain", methods=["GET"])
+def valid_chain():
+    if not joined:
+        return excep, 400
+    is_valid = blockchain.valid_chain(blockchain.chain)
     if is_valid:
         response = {"message": "All good. The Blockchain is valid."}
     else:
@@ -154,41 +305,16 @@ def is_valid():
 
 @app.route("/api/get_chain", methods=["GET"])
 def get_chain():
+    if not joined:
+        return excep, 400
     response = {"chain": blockchain.chain, "length": len(blockchain.chain)}
     return jsonify(response), 200
 
 
-@app.route("/api/add_transaction", methods=["POST"])
-def add_transaction():
-    json = request.get_json()
-    transaction_keys = ["sender", "receiver", "amount"]
-    if not all(key in json for key in transaction_keys):
-        return "Some elements of the transaction are missing", 400
-    index = blockchain.add_transaction(json["sender"], json["receiver"], json["amount"])
-    response = {
-        "message": f"This transaction will be added to Blokc {index}",
-        "block": blockchain.transactions,
-    }
-    return jsonify(response), 201
-
-
-@app.route("/api/connect_node", methods=["POST"])
-def connect_node():
-    json = request.get_json()
-    nodes = json.get("nodes")
-    if nodes is None:
-        return "No node", 400
-    for node in nodes:
-        blockchain.add_node(node)
-    response = {
-        "message": "All the nodes are now connected. The RMM Blockchain contains the following nodes.",
-        "total_nodes": list(blockchain.nodes),
-    }
-    return jsonify(response), 201
-
-
 @app.route("/api/replace_chain", methods=["GET"])
 def replace_chain():
+    if not joined:
+        return excep, 400
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:
         response = {
@@ -205,6 +331,8 @@ def replace_chain():
 
 @app.route("/api/get_balance", methods=["POST"])
 def get_balance():
+    if not joined:
+        return excep, 400
     json = request.get_json()
     username = json.get("username")
     balance = blockchain.get_balance(username)
@@ -212,4 +340,4 @@ def get_balance():
     return jsonify(response), 200
 
 
-app.run(host="0.0.0.0", port=5000)
+app.run(host="0.0.0.0", port=sys.argv[2])
