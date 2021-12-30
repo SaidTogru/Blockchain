@@ -15,10 +15,10 @@ export class AppComponent {
   port: number = 0;
   joined: boolean = false;
 
-  constructor(private userService: UserService, private router: Router) { }
+  constructor(private userService: UserService, private router: Router, private storageService: StorageService) { }
 
   ngOnInit(): void {
-  
+
   }
 
   join(username: string, port: number){

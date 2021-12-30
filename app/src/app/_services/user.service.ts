@@ -37,5 +37,4 @@ export class UserService {
   join(username: string, port: number): Observable<any> {
     return this.http.post(API_URL + 'api/join', { "username": username, "port": port });
   }
-
 }
