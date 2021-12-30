@@ -19,7 +19,7 @@ export class UserService {
   }
 
   makeTransaction(sender: string, receiver: string, amount: number): Observable<any> {
-    return this.http.post(API_URL + 'api/add_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
+    return this.http.post(API_URL + 'api/send_transaction', { "sender": sender, "receiver": receiver, "amount": amount })
   }
 
   getUserBoard(): Observable<any> {
@@ -40,5 +40,9 @@ export class UserService {
 
   connected(): Observable<any> {
     return this.http.get(API_URL + 'api/connected');
+  }
+
+  getKey(): Observable<any> {
+    return this.http.get(API_URL + 'api/get_keys');
   }
 }
