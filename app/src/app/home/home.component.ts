@@ -16,26 +16,7 @@ export class HomeComponent implements OnInit {
   constructor(private userService: UserService) { }
 
   ngOnInit(): void {
-    this.userService.getBlockchain().subscribe(
-      data => {
-        this.content = data;
-        this.blockchain = JSON.parse(data).chain
-        console.log(this.blockchain)
-      },
-      err => {
-        this.content = JSON.parse(err.error).message;
-      }
-    );
+  
   }
 
-  join(username: string, port: number){
-    this.userService.join(username,port).subscribe(
-      data => {
-        this.joined = true
-      },
-      err => {
-        console.log(err)
-      }
-    );
-  }
 }

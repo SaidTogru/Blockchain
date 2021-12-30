@@ -1,18 +1,18 @@
 <div id="app">
   <nav class="navbar navbar-expand navbar-dark bg-dark">
-    <a href="#" class="navbar-brand">HSRMCOIN</a>
+    <a class="navbar-brand">HSRMCOIN</a>
     <ul class="navbar-nav mr-auto" routerLinkActive="active">
       <li class="nav-item">
-        <a href="/home" class="nav-link" routerLink="home">Home</a>
+        <a href="/home" class="nav-link" *ngIf="joined" routerLink="home">Home</a>
       </li>
       <li class="nav-item">
-        <a href="/transaction" class="nav-link" routerLink="transaction">Transaction</a>
+        <a href="/transaction" *ngIf="joined" class="nav-link" routerLink="transaction">Transaction</a>
       </li>
       <li class="nav-item">
-        <a href="/block" class="nav-link" routerLink="block">Block Explorer</a>
+        <a href="/block" class="nav-link" *ngIf="joined" routerLink="block">Block Explorer</a>
       </li>
       <li class="nav-item">
-        <a href="/user" class="nav-link" routerLink="user">User</a>
+        <a href="/user" class="nav-link" *ngIf="joined" routerLink="user">User</a>
       </li>
     </ul>
 
@@ -30,11 +30,23 @@
         <a href="/profile" class="nav-link" routerLink="profile">KEK</a>
       </li>
       <li class="nav-item">
-        <a href class="nav-link">LogOut</a>
+        <a href="#" class="nav-link">LogOut</a>
       </li>
     </ul>
   </nav>
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+    <div id="login" *ngIf="!joined">
+      <form name='form-login'>
+        <span class="fontawesome-user"></span>
+          <input type="text" id="user" [(ngModel)]="user" placeholder="Username">
+       
+        <span class="fab fa-connectdevelop"></span>
+          <input type="number" id="pass" [(ngModel)]="port" min="5000" max="6000" placeholder="Port">
+        
+        <input type="submit" (click)="join(user,port)" value="Login">
 
+      </form>
+  </div>
   <div class="container">
     <router-outlet></router-outlet>
   </div>
