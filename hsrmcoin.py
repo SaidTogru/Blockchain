@@ -13,7 +13,6 @@ import os
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 import sys
-from requests import get
 
 # First Argument Username Second Port
 
@@ -47,7 +46,7 @@ class Blockchain:
             self.publickey = self.privatekey.publickey()
 
     def connect(self):  # Peer Discovery
-        ip = get("https://api.ipify.org").content.decode("utf8")
+        ip = requests.get("https://api.ipify.org").content.decode("utf8")
         with open("DNS_Feed.json") as json_file:
             data = json.load(json_file)
             for name, address in data.items():
@@ -64,10 +63,13 @@ class Blockchain:
         sendTo = []
         for node in self.activeNodes:
             try:
-                requests.post(f"{node}/api/fetch_transaction", data=jsonify("test"))
+                a = requests.post(
+                    f"{node}/api/fetch_transaction",
+                    data=jsonify("test"),
+                    headers={"content-type": "application/json"},
+                )
                 sendTo.append(node)
             except Exception as e:
-                print(e)
                 print(
                     f"Post request to {node} raised a Error. Probably the site is down!"
                 )
@@ -227,17 +229,17 @@ def join():
 @app.route("/api/show_network", methods=["GET"])
 def show_network():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     if len(blockchain.activeNodes) == 0:
-        return "There are no peers in the network", 200
+        return jsonify("There are no peers in the network"), 200
     else:
-        return f"Currently on the network: {blockchain.activeNodes}", 200
+        return jsonify(f"Currently on the network: {blockchain.activeNodes}"), 200
 
 
 @app.route("/api/send_transaction", methods=["POST"])
 def send_transaction():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     json_data = request.get_json()
     transaction_keys = ["sender", "receiver", "amount"]
     if not all(key in json_data for key in transaction_keys):
@@ -254,14 +256,16 @@ def send_transaction():
         }
         return jsonify(response), 201
     else:
-        response = "Unfortunately, there are no active nodes to send the transaction to"
-        return response, 201
+        response = {
+            "message": "Unfortunately, there are no active nodes to send the transaction to"
+        }
+        return jsonify(response), 201
 
 
 @app.route("/api/fetch_transaction", methods=["POST"])
 def fetch_transaction():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     json_data = request.get_json(force=True)
     print(json_data)
     transaction_keys = ["sender", "receiver", "amount", "signature", "publickey"]
@@ -273,7 +277,7 @@ def fetch_transaction():
 @app.route("/api/mine_block", methods=["GET"])
 def mine_block():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     previous_block = blockchain.get_previous_block()
     previous_proof = previous_block["proof"]
     proof = blockchain.proof_of_work(previous_proof)
@@ -294,7 +298,7 @@ def mine_block():
 @app.route("/api/valid_chain", methods=["GET"])
 def valid_chain():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     is_valid = blockchain.valid_chain(blockchain.chain)
     if is_valid:
         response = {"message": "All good. The Blockchain is valid."}
@@ -307,7 +311,7 @@ def valid_chain():
 @app.route("/api/get_chain", methods=["GET"])
 def get_chain():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     response = {"chain": blockchain.chain, "length": len(blockchain.chain)}
     return jsonify(response), 200
 
@@ -315,7 +319,7 @@ def get_chain():
 @app.route("/api/replace_chain", methods=["GET"])
 def replace_chain():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:
         response = {
@@ -333,7 +337,7 @@ def replace_chain():
 @app.route("/api/get_balance", methods=["POST"])
 def get_balance():
     if not joined:
-        return excep, 400
+        return jsonify(excep), 400
     json = request.get_json()
     username = json.get("username")
     balance = blockchain.get_balance(username)
@@ -341,4 +345,4 @@ def get_balance():
     return jsonify(response), 200
 
 
-app.run(host="0.0.0.0", port=sys.argv[2])
+app.run(host="0.0.0.0", port=sys.argv[1])
