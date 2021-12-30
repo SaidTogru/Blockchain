@@ -16,7 +16,7 @@ import sys
 
 # First Argument Username Second Port
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 2:
     print("Please read the docs")
     sys.exit(1)
 
@@ -54,7 +54,7 @@ class Blockchain:
                     address[0][address[0].find("http://") + 7 : address[0].find(":50")]
                     == ip
                 ):
-                    if address[1].split(":")[-1] != sys.argv[2]:
+                    if address[1].split(":")[-1] != sys.argv[1]:
                         self.activeNodes.append(address[1])
                 else:
                     self.activeNodes.append(address[0])
@@ -63,9 +63,9 @@ class Blockchain:
         sendTo = []
         for node in self.activeNodes:
             try:
-                a = requests.post(
+                requests.post(
                     f"{node}/api/fetch_transaction",
-                    data=jsonify("test"),
+                    json=transaction,
                     headers={"content-type": "application/json"},
                 )
                 sendTo.append(node)
@@ -225,6 +225,14 @@ def join():
         "message": f"{blockchain.username}, thank you for joining the HSRM Network. You successfully created an Account and can participate!"
     }
     return jsonify(response), 200
+
+
+@app.route("/api/connected", methods=["GET"])
+def connected():
+    if not joined:
+        return jsonify(), 400
+    else:
+        return jsonify(), 200
 
 
 @app.route("/api/show_network", methods=["GET"])

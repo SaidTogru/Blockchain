@@ -1,15 +1,9 @@
 import requests
-import re
 from flask import Flask, jsonify, request
 
+url = "http://localhost:5000/api/fetch_transaction"
+payload = {"sender": "", "receiver": "", "amount": 10, "signature": 1, "publickey": 2}
 
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+x = requests.post(url, json=payload, headers={"Content-Type": "text/plain"})
 
-url = "http://127.0.0.1:5000/api/fetch_transaction"  # Set destination URL here
-post_fields = {"foo": "bar"}  # Set POST fields here
-
-request = Request(url, urlencode(post_fields).encode())
-json = urlopen(request).read().decode()
-print(json)
-print("opfer")
+print(x.text)
