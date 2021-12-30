@@ -8,7 +8,9 @@ import { UserService } from '../_services/user.service';
   styleUrls: ['./transaction.component.scss']
 })
 export class TransactionComponent implements OnInit {
-
+  pubkey: any;
+  string1: any = "b'-----BEGIN PUBLIC KEY-----\n"
+  string2: any = "\n-----END PUBLIC KEY-----'"
   content?: string;
   blockchain?: string;
   sender: any = '';
@@ -18,6 +20,7 @@ export class TransactionComponent implements OnInit {
   constructor(private userService: UserService, private storageService: StorageService) { }
 
   ngOnInit(): void {
+    this.getKey()
     this.sender = this.storageService.getUser()
     console.log(this.sender)
     this.userService.getBlockchain().subscribe(
@@ -38,6 +41,20 @@ export class TransactionComponent implements OnInit {
       },
       err => {
         this.content = JSON.parse(err.error).message;
+      }
+    )
+  }
+
+  getKey(): void {
+    this.userService.getKey().subscribe(
+      data =>{
+        this.pubkey = data.publickey
+        this.pubkey = this.pubkey.replace("b'-----BEGIN PUBLIC KEY-----\\n","")
+        this.pubkey = this.pubkey.replace("\\n-----END PUBLIC KEY-----'","")
+
+      },
+      err => {
+        console.log(err)
       }
     )
   }
