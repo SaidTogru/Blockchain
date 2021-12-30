@@ -25,6 +25,7 @@ if len(sys.argv) < 2:
 
 class Blockchain:
     activeNodes = []
+    transactions = []
 
     def __init__(self, username):
         self.chain = []
