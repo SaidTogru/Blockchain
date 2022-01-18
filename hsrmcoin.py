@@ -91,11 +91,9 @@ class Blockchain:
         receiver = transaction["receiver"]
         amount = transaction["amount"]
         newdata = {"sender": sender, "receiver": receiver, "amount": amount}
-        print("GOT NEW TRANSACTION", transaction)
         if self.validate_transaction(
             newdata, transaction["publickey"], transaction["signature"], amount
         ):
-            print("ADDED TRANSACTION")
             self.add_transaction(sender, receiver, amount)
             return True
         else:
@@ -386,13 +384,11 @@ def replace_chain():
     return jsonify(response), 200
 
 
-@app.route("/api/get_balance", methods=["POST"])
+@app.route("/api/get_balance", methods=["GET"])
 def get_balance():
     if not joined:
         return jsonify(excep), 400
-    json = request.get_json()
-    username = json.get("username")
-    balance = blockchain.get_balance(username)
+    balance = blockchain.get_balance()
     response = {"message": f"Your balance is {balance} HSRM Coins"}
     return jsonify(response), 200
 
