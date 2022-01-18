@@ -16,11 +16,20 @@ export class TransactionComponent implements OnInit {
   sender: any = '';
   receiver: string = '';
   amount: number = 0;
+  balance: number = 0;
 
   constructor(private userService: UserService, private storageService: StorageService) { }
 
   ngOnInit(): void {
     this.getKey()
+    this.userService.getBalance().subscribe(
+      data => {
+        this.balance = data
+      },
+      err => {
+        this.content = JSON.parse(err.error).message
+      }
+    );
     this.sender = this.storageService.getUser()
     console.log(this.sender)
     this.userService.getBlockchain().subscribe(

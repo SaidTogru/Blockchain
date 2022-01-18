@@ -15,7 +15,7 @@ export class UserService{
 
   init(port: any): void {
     this.PORT = port
-    console.log(this.PORT)
+    console.log(API_URL + (this.storageService.getPort() || this.PORT) + '/api/get_chain')
   }
 
   getBlockchain(): Observable<any> {
@@ -27,6 +27,7 @@ export class UserService{
   }
 
   sync(): Observable<any> {
+    console.log(API_URL + this.storageService.getPort() +  '/api/replace_chain')
     return this.http.get(API_URL + this.storageService.getPort() +  '/api/replace_chain');
   }
 
@@ -36,14 +37,18 @@ export class UserService{
 
   join(username: string, port: number): Observable<any> {
     this.init(port)
-    return this.http.post(API_URL + this.storageService.getPort() + '/api/join', { "username": username, "port": port });
+    return this.http.post(API_URL + (this.storageService.getPort() || this.PORT) + '/api/join', { "username": username, "port": port });
   }
 
   connected(): Observable<any> {
-    return this.http.get(API_URL + this.storageService.getPort() + '/api/connected');
+    return this.http.get(API_URL + (this.storageService.getPort() || this.PORT) + '/api/connected');
   }
 
   getKey(): Observable<any> {
     return this.http.get(API_URL + '/api/get_keys');
+  }
+
+  getBalance(): Observable<any> {
+    return this.http.get(API_URL + '/api/get_balance');
   }
 }
