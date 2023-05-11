@@ -39,12 +39,10 @@ The backend server will be accessible at http://localhost:<port_number>.
 
 ### Setting Up the Frontend
 Open a new terminal and navigate to the app directory within the project's root directory.
-Install the required Angular dependencies:
 
-npm install
+Install the required Angular dependencies: npm install
 
-Start the Angular development server:
-ng serve
+Start the Angular development server: ng serve
 
 Open a web browser and navigate to http://localhost:4200. The Angular app will be running.
 
