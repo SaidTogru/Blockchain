@@ -68,5 +68,5 @@ Once you have joined the network, you can perform the following actions:
 
 Please refer to the individual directories within the project for detailed instructions on setting up and running the different components.
 
-License
+# License
 This project is licensed under the MIT License. 
