@@ -32,7 +32,7 @@ Ensure you have Python 3.x installed on your machine, installed all dependecies 
 Open a terminal and navigate to the project's root directory.
 Run the Flask backend server:
 
-python hsrmcoin.py <port_number>
+python main.py <port_number>
 
 Replace <port_number> with the desired port number for the backend server.
 The backend server will be accessible at http://localhost:<port_number>.
