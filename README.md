@@ -5,7 +5,21 @@ The main goal of this project was to transform a local blockchain class in Pytho
 
 We started by researching the P2P model, collecting and evaluating various approaches. The architecture of decentralized cryptocurrencies like Bitcoin and Ethereum became the basis of our design. We began with low-level communication through the Python modules Socket and Threading and wrote several script classes that could independently be server and client. This was facilitated by the use of two virtual machines running Ubuntu.
 
-![Screenshot 2023-05-11 113220](https://github.com/SaidTogru/Blockchain/assets/65668541/7eb80c8a-8f4b-4e54-9e20-40b663533726)
+```c
+export class UserService{
+  PORT: any
+
+  constructor(private http: HttpClient, private storageService: StorageService) { }
+
+  init(port: any): void {
+    this.PORT = port
+    console.log(API_URL + (this.storageService.getPort() || this.PORT) + '/api/get_chain')
+  }
+
+  getBlockchain(): Observable<any> {
+    return this.http.get(API_URL + this.storageService.getPort() + '/api/get_chain', { responseType: 'text' });
+  }
+```
 
 Our model is shown in figure 1. The main issue was that we were trying to independently develop a concept where nodes could act as both a server and a client. We solved this with dynamic port distribution, but we still had to make a deep construction to ensure stable communication between all participants. We then focused more on implementing the main features of a decentralized blockchain network.
 
